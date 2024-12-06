@@ -18,10 +18,12 @@ import numpy as np
 small_path = Path("../../tsp_problems/eil51.tsp.txt")
 medium_path = Path("../../tsp_problems/a280.tsp.txt")
 large_path = Path("../../tsp_problems/pcb442.tsp.txt")
+test_path = Path("../../tsp_problems/test.txt")
 
 data_small = small_path.read_text().split("\n")[6:][:-2]
 data_medium = medium_path.read_text().split("\n")[6:][:-2]
 data_large = large_path.read_text().split("\n")[6:][:-2]
+data_test = test_path.read_text().split("\n")[6:][:-2]
 
 
 class Node:
@@ -70,4 +72,37 @@ def make_initial_solution(highest_id, seed):
     return sol
 
 
-nodes, coordinates = data_to_nodes(data_small)
+def two_opt(solution, seed):
+    """Two opt func."""
+    new_solution = solution.copy()
+    print(f"Initial_solution: {solution}")
+    random.seed(seed)
+
+    index_edge_1 = np.random.randint(0, len(solution) - 1)
+    while True:
+        index_edge_2 = np.random.randint(0, len(solution) - 1)
+        # checks edges are nonadjecent
+        if index_edge_1 - 1 > index_edge_2 or index_edge_2 > index_edge_1 + 1:
+            break
+
+    print(f"index_edge_1: {index_edge_1}, index_edge_2: {index_edge_2}")
+
+    if index_edge_1 < index_edge_2:
+        new_solution[index_edge_1 + 1 : index_edge_2 + 1] = solution[
+            index_edge_1 + 1 : index_edge_2 + 1
+        ][::-1]
+    else:
+        new_solution[index_edge_2 + 1 : index_edge_1 + 1] = solution[
+            index_edge_2 + 1 : index_edge_1 + 1
+        ][::-1]
+
+    return new_solution
+
+
+nodes, coordinates = data_to_nodes(data_test)
+
+highest_id = len(nodes)
+seed = 123
+solution = make_initial_solution(highest_id, seed)
+new_sol = two_opt(solution, seed)
+print(new_sol)
