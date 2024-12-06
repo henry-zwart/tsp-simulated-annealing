@@ -73,7 +73,7 @@ def make_initial_solution(highest_id, seed):
 
 
 def two_opt(solution, seed):
-    """Two opt func."""
+    """Two opt func. add description"""
     new_solution = solution.copy()
     print(f"Initial_solution: {solution}")
     random.seed(seed)
