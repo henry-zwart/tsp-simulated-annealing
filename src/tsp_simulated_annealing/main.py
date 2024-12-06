@@ -20,10 +20,28 @@ medium_path = Path("../../tsp_problems/a280.tsp.txt")
 large_path = Path("../../tsp_problems/pcb442.tsp.txt")
 test_path = Path("../../tsp_problems/test.txt")
 
+small_path_sol = Path("../../tsp_problems/eil51.opt.tour.txt")
+medium_path_sol = Path("../../tsp_problems/a280.opt.tour.txt")
+large_path_sol = Path("../../tsp_problems/pcb442.opt.tour.txt")
+
 data_small = small_path.read_text().split("\n")[6:][:-2]
 data_medium = medium_path.read_text().split("\n")[6:][:-2]
 data_large = large_path.read_text().split("\n")[6:][:-2]
 data_test = test_path.read_text().split("\n")[6:][:-2]
+
+optimal_route_small = np.array(
+    [int(x) for x in small_path_sol.read_text().split("\n")[6:][:-3]]
+)
+optimal_route_medium = np.array(
+    [int(x) for x in medium_path_sol.read_text().split("\n")[5:][:-2]]
+)
+optimal_route_large = np.array(
+    [int(x) for x in large_path_sol.read_text().split("\n")[6:][:-3]]
+)
+
+# for elem in data_small_sol:
+#     print(elem)
+# print(data_small_sol)
 
 
 class Node:
@@ -72,7 +90,8 @@ def make_initial_solution(highest_id, seed):
 
 
 def two_opt(solution, seed):
-    """Two opt func. add description"""
+    """Two opt func. add description
+    TODO: be able to break the edge between last node and first node."""
     new_solution = solution.copy()
     print(f"Initial_solution: {solution}")
     random.seed(seed)
@@ -109,26 +128,30 @@ def distance_route(solution, coordinates):
     return total_dis
 
 
-# def main_algorithm(data):
-#     nodes, coordinates = data_to_nodes(data)
+def main_algorithm(data, opt_dis, cooling_schedule, tol):
+    nodes, coordinates = data_to_nodes(data)
 
-#     highest_id = len(nodes)
-#     seed = 123
+    highest_id = len(nodes)
+    seed = 123
 
-#     cur_sol = make_initial_solution(highest_id, seed)
-#     cur_dis = distance_route(cur_sol, coordinates)
-#     while something:
-#         new_sol = two_opt(cur_sol, seed)
-#         new_dis = distance_route(new_sol, coordinates)
+    cur_sol = make_initial_solution(highest_id, seed)
+    cur_dis = distance_route(cur_sol, coordinates)
+    while cur_dis / opt_dis > tol:
+        new_sol = two_opt(cur_sol, seed)
+        new_dis = distance_route(new_sol, coordinates)
 
-#         if new_dis < cur_dis:
-#             cur_sol = new_sol
-#             cur_dis = new_dis
-#         else:
-#             chance = cooling_schedule1
-#             if chance:
-#                 cur_sol = new_sol
-#                 cur_dis = new_dis
+        if new_dis < cur_dis:
+            cur_sol = new_sol
+            cur_dis = new_dis
+        else:
+            chance = cooling_schedule
+            if chance:
+                cur_sol = new_sol
+                cur_dis = new_dis
 
 
-# main_algorithm(data_test)
+nodes, coordinates = data_to_nodes(data_small)
+
+opt_route = optimal_route_small
+opt_dis = distance_route(opt_route, coordinates)
+# main_algorithm(data_small, opt_dis, cooling_schedule, tol=0.001)
