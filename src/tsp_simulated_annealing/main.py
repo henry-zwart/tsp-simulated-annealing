@@ -15,14 +15,16 @@ from pathlib import Path
 
 import numpy as np
 
-small_path = Path("../../tsp_problems/eil51.tsp.txt")
-medium_path = Path("../../tsp_problems/a280.tsp.txt")
-large_path = Path("../../tsp_problems/pcb442.tsp.txt")
-test_path = Path("../../tsp_problems/test.txt")
+from tsp_simulated_annealing.acceptance import acceptance
 
-small_path_sol = Path("../../tsp_problems/eil51.opt.tour.txt")
-medium_path_sol = Path("../../tsp_problems/a280.opt.tour.txt")
-large_path_sol = Path("../../tsp_problems/pcb442.opt.tour.txt")
+small_path = Path("../tsp_problems/eil51.tsp.txt")
+medium_path = Path("../tsp_problems/a280.tsp.txt")
+large_path = Path("../tsp_problems/pcb442.tsp.txt")
+test_path = Path("../tsp_problems/test.txt")
+
+small_path_sol = Path("../tsp_problems/eil51.opt.tour.txt")
+medium_path_sol = Path("../tsp_problems/a280.opt.tour.txt")
+large_path_sol = Path("../tsp_problems/pcb442.opt.tour.txt")
 
 data_small = small_path.read_text().split("\n")[6:][:-2]
 data_medium = medium_path.read_text().split("\n")[6:][:-2]
@@ -93,7 +95,6 @@ def two_opt(solution, seed):
     """Two opt func. add description
     TODO: be able to break the edge between last node and first node."""
     new_solution = solution.copy()
-    print(f"Initial_solution: {solution}")
     random.seed(seed)
 
     index_edge_1 = np.random.randint(0, len(solution) - 1)
@@ -128,15 +129,17 @@ def distance_route(solution, coordinates):
     return total_dis
 
 
-def main_algorithm(data, opt_dis, cooling_schedule, tol):
+def main_algorithm(data, markov_chain_length, cooling_schedule, T_0):
     nodes, coordinates = data_to_nodes(data)
-
+    """
+    To-do - stay for some time at one temperature T
+    """
     highest_id = len(nodes)
     seed = 123
-
+    T = T_0
     cur_sol = make_initial_solution(highest_id, seed)
     cur_dis = distance_route(cur_sol, coordinates)
-    while cur_dis / opt_dis > tol:
+    for t in range(1, markov_chain_length):
         new_sol = two_opt(cur_sol, seed)
         new_dis = distance_route(new_sol, coordinates)
 
@@ -144,10 +147,14 @@ def main_algorithm(data, opt_dis, cooling_schedule, tol):
             cur_sol = new_sol
             cur_dis = new_dis
         else:
-            chance = cooling_schedule
-            if chance:
+            chance = acceptance(new_dis, cur_dis, T)
+            if np.random.uniform(0, 1) <= chance:
                 cur_sol = new_sol
                 cur_dis = new_dis
+        # Cool after each loop
+        T = cooling_schedule(t)
+
+    return cur_sol, cur_dis
 
 
 nodes, coordinates = data_to_nodes(data_small)
