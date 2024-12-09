@@ -10,12 +10,13 @@ File description:
 """
 
 import math
-import random
 from pathlib import Path
 
 import numpy as np
 
 from tsp_simulated_annealing.acceptance import acceptance
+
+rng = np.random.default_rng(seed=42)
 
 small_path = Path("../tsp_problems/eil51.tsp.txt")
 medium_path = Path("../tsp_problems/a280.tsp.txt")
@@ -78,12 +79,11 @@ def distance_two_nodes(id1, id2, coordinates):
     return math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
 
 
-def make_initial_solution(highest_id, seed):
+def make_initial_solution(highest_id, rng):
     """Will produce a randomly generated initial solution for STP.
     The same seed will always produce the same intitial solution."""
-    random.seed(seed)
     sol = np.linspace(0, highest_id, highest_id)
-    random.shuffle(sol)
+    rng.shuffle(sol)
     sol = np.append(sol, sol[0])
     return np.array([int(x) for x in sol])
 
@@ -92,13 +92,12 @@ def two_opt(solution, seed):
     """The two-opt algorithm. Two-opt takes two non-adjecent edges and "cuts"
     the link in between both edges and reverses the resulting middle chain of nodes
     , attaching them to the other detached node.
-    TODO: be able to break the edge between last node and first node."""
+    """
     new_solution = solution.copy()
-    random.seed(seed)
 
-    index_edge_1 = np.random.randint(0, len(solution) - 1)
+    index_edge_1 = rng.integers(0, len(solution) - 1)
     while True:
-        index_edge_2 = np.random.randint(0, len(solution) - 1)
+        index_edge_2 = rng.integers(0, len(solution) - 1)
         # checks edges are nonadjecent
         if index_edge_1 - 1 > index_edge_2 or index_edge_2 > index_edge_1 + 1:
             break
@@ -128,19 +127,18 @@ def distance_route(solution, coordinates):
     return total_dis
 
 
-def main_algorithm(data, markov_chain_length, cooling_schedule, T_0):
+def main_algorithm(data, markov_chain_length, cooling_schedule, T_0, rng):
     nodes, coordinates = data_to_nodes(data)
     """
     To-do - stay for some time at one temperature T
     """
     highest_id = len(nodes) - 1
-    seed = 123
     T = T_0
-    cur_sol = make_initial_solution(highest_id, seed)
+    cur_sol = make_initial_solution(highest_id, rng)
     print("initial sol: ", cur_sol)
     cur_dis = distance_route(cur_sol, coordinates)
     for t in range(1, markov_chain_length):
-        new_sol = two_opt(cur_sol, seed)
+        new_sol = two_opt(cur_sol, rng)
         new_dis = distance_route(new_sol, coordinates)
 
         if new_dis < cur_dis:
@@ -148,7 +146,7 @@ def main_algorithm(data, markov_chain_length, cooling_schedule, T_0):
             cur_dis = new_dis
         else:
             chance = acceptance(new_dis, cur_dis, T)
-            if np.random.uniform(0, 1) <= chance:
+            if rng.uniform(0, 1) <= chance:
                 cur_sol = new_sol
                 cur_dis = new_dis
         # Cool after each loop
