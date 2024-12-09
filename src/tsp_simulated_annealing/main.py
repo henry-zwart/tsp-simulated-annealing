@@ -55,12 +55,12 @@ def data_to_nodes(data):
     """Takes a data file, and transforms it into
     a list of Nodes and a list of coordinates."""
     nodes = []
-    coordinates = [None]  # so the id corresponds to index
+    coordinates = []  # so the id corresponds to index
     for elem in data:
         info = elem.split(" ")
         info = " ".join(info).split()
         id, x, y = info
-        nodes.append(Node(id, x, y))
+        nodes.append(Node(str(int(id) - 1), x, y))
         coordinates.append((float(x), float(y)))
     return (nodes, coordinates)
 
@@ -82,7 +82,7 @@ def make_initial_solution(highest_id, seed):
     """Will produce a randomly generated initial solution for STP.
     The same seed will always produce the same intitial solution."""
     random.seed(seed)
-    sol = np.linspace(1, highest_id, highest_id)
+    sol = np.linspace(0, highest_id, highest_id)
     random.shuffle(sol)
     sol = np.append(sol, sol[0])
     return np.array([int(x) for x in sol])
@@ -122,7 +122,7 @@ def distance_route(solution, coordinates):
     for i in range(len(solution) - 1):
         total_dis += distance_two_nodes(solution[i], solution[i + 1], coordinates)
     # adds dis between first and last node (making a cicle)
-    total_dis += distance_two_nodes(solution[0], solution[-1], coordinates)
+    # total_dis += distance_two_nodes(solution[0], solution[-1], coordinates)
     return total_dis
 
 
@@ -131,7 +131,7 @@ def main_algorithm(data, markov_chain_length, cooling_schedule, T_0):
     """
     To-do - stay for some time at one temperature T
     """
-    highest_id = len(nodes)
+    highest_id = len(nodes) - 1
     seed = 123
     T = T_0
     cur_sol = make_initial_solution(highest_id, seed)
@@ -155,8 +155,9 @@ def main_algorithm(data, markov_chain_length, cooling_schedule, T_0):
     return cur_sol, cur_dis
 
 
-nodes, coordinates = data_to_nodes(data_small)
+# nodes, coordinates = data_to_nodes(data_small)
+# print(distance_two_nodes(0, 1, coordinates))
 
-opt_route = optimal_route_small
-opt_dis = distance_route(opt_route, coordinates)
+# opt_route = optimal_route_small
+# opt_dis = distance_route(opt_route, coordinates)
 # main_algorithm(data_small, opt_dis, cooling_schedule, tol=0.001)
