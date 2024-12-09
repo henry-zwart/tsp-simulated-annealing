@@ -89,7 +89,9 @@ def make_initial_solution(highest_id, seed):
 
 
 def two_opt(solution, seed):
-    """Two opt func. add description
+    """The two-opt algorithm. Two-opt takes two non-adjecent edges and "cuts"
+    the link in between both edges and reverses the resulting middle chain of nodes
+    , attaching them to the other detached node.
     TODO: be able to break the edge between last node and first node."""
     new_solution = solution.copy()
     random.seed(seed)
