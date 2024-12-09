@@ -41,10 +41,6 @@ optimal_route_large = np.array(
     [int(x) for x in large_path_sol.read_text().split("\n")[6:][:-3]]
 )
 
-# for elem in data_small_sol:
-#     print(elem)
-# print(data_small_sol)
-
 
 class Node:
     """Class for a node, has attributes: id, x-coordinate, y-coordinate."""
@@ -88,6 +84,7 @@ def make_initial_solution(highest_id, seed):
     random.seed(seed)
     sol = np.linspace(1, highest_id, highest_id)
     random.shuffle(sol)
+    sol = np.append(sol, sol[0])
     return np.array([int(x) for x in sol])
 
 
@@ -138,6 +135,7 @@ def main_algorithm(data, markov_chain_length, cooling_schedule, T_0):
     seed = 123
     T = T_0
     cur_sol = make_initial_solution(highest_id, seed)
+    print("initial sol: ", cur_sol)
     cur_dis = distance_route(cur_sol, coordinates)
     for t in range(1, markov_chain_length):
         new_sol = two_opt(cur_sol, seed)
