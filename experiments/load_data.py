@@ -9,7 +9,7 @@ def main():
     Calculate cost for the solution.
     """
     rng = np.random.default_rng(125)
-    problem = Problem.SMALL.load()
+    problem = Problem.MEDIUM.load()
     print(problem.cities)
     print(problem.locations)
     print(problem.optimal_tour)

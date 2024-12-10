@@ -41,11 +41,18 @@ class Problem(StrEnum):
         """
         with self.problem_path().open("r") as f:
             data = [d.strip().split(" ") for d in f.readlines()]
-        cities = np.array([city for city, *_ in data], dtype=np.int64)
 
-        # Start city IDs at 0 rather than 1
+        # Some lines of a280 have extra spaces
+        data = [[x for x in row if x != ""] for row in data]
+
+        # Separate out cities and renormalise IDs
+        cities = np.array([city for city, *_ in data], dtype=np.int64)
         normalised_cities = cities - 1
+
+        # Separate out locations
         locations = np.array([location for _, *location in data], dtype=np.float64)
+
+        # Load optimal route, and return as unified dataclass
         solution = self.load_solution()
         return ProblemData(normalised_cities, locations, solution)
 
@@ -59,7 +66,6 @@ class Problem(StrEnum):
         # Add the first city to the end, to match our expected format
         tour.append(tour[0])
         normalised_tour = np.array(tour, dtype=np.int64) - 1
-        print(normalised_tour)
         return normalised_tour
 
     def problem_path(self) -> Path:
