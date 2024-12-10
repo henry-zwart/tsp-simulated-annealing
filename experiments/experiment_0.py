@@ -13,6 +13,7 @@ from pathlib import Path
 
 import numpy as np
 
+from tsp_simulated_annealing.acceptance import acceptance
 from tsp_simulated_annealing.cooling_schedules import (
     inverse_log_cooling,
 )
@@ -25,5 +26,7 @@ if __name__ == "__main__":
     small_path = Path("../tsp_problems/eil51.tsp.txt")
     data_small = small_path.read_text().split("\n")[6:][:-2]
 
-    solution, dist = main_algorithm(data_small, 100, cooling_schedule, 20, rng)
+    solution, dist = main_algorithm(
+        data_small, 100, cooling_schedule, 20, rng, acceptance
+    )
     print(f"solution: {solution}, distance {dist} ")

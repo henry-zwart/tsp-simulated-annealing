@@ -14,18 +14,16 @@ from pathlib import Path
 
 import numpy as np
 
-from tsp_simulated_annealing.acceptance import acceptance
-
 rng = np.random.default_rng(seed=42)
 
-small_path = Path("../tsp_problems/eil51.tsp.txt")
-medium_path = Path("../tsp_problems/a280.tsp.txt")
-large_path = Path("../tsp_problems/pcb442.tsp.txt")
-test_path = Path("../tsp_problems/test.txt")
+small_path = Path("tsp_problems/eil51.tsp.txt")
+medium_path = Path("tsp_problems/a280.tsp.txt")
+large_path = Path("tsp_problems/pcb442.tsp.txt")
+test_path = Path("tsp_problems/test.txt")
 
-small_path_sol = Path("../tsp_problems/eil51.opt.tour.txt")
-medium_path_sol = Path("../tsp_problems/a280.opt.tour.txt")
-large_path_sol = Path("../tsp_problems/pcb442.opt.tour.txt")
+small_path_sol = Path("tsp_problems/eil51.opt.tour.txt")
+medium_path_sol = Path("tsp_problems/a280.opt.tour.txt")
+large_path_sol = Path("tsp_problems/pcb442.opt.tour.txt")
 
 data_small = small_path.read_text().split("\n")[6:][:-2]
 data_medium = medium_path.read_text().split("\n")[6:][:-2]
@@ -76,7 +74,7 @@ def distance_two_nodes(id1, id2, coordinates):
     """Calculates the distance between two nodes."""
     x1, y1 = coordinates[id1]
     x2, y2 = coordinates[id2]
-    return math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+    return round(math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2))
 
 
 def make_initial_solution(highest_id, rng):
@@ -127,7 +125,7 @@ def distance_route(solution, coordinates):
     return total_dis
 
 
-def main_algorithm(data, markov_chain_length, cooling_schedule, T_0, rng):
+def main_algorithm(data, markov_chain_length, cooling_schedule, T_0, rng, acceptance):
     nodes, coordinates = data_to_nodes(data)
     """
     To-do - stay for some time at one temperature T

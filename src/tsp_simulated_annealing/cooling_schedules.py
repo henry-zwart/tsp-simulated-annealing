@@ -8,7 +8,43 @@ File description:
     This file contains all the cooling schedules researched in our paper.
 """
 
+from enum import StrEnum
+from functools import partial
+
 import numpy as np
+
+
+class Cooling(StrEnum):
+    Linear = "linear"
+    Exponential = "exponential"
+    InverseLog = "inverse_log"
+
+
+def get_scheduler(temp_0: float, temp_n: float, time_n: float, algorithm: Cooling):
+    match algorithm:
+        case Cooling.Linear:
+            eta = (temp_0 - temp_n) / time_n
+            return partial(linear_cooling, eta=eta, T_0=temp_0)
+        case Cooling.Exponential:
+            alpha = np.pow(temp_n / temp_0, time_n)
+            return partial(exponential_cooling, alpha=alpha, T_0=temp_0)
+        case Cooling.InverseLog:
+            # b = optimize.root_scalar(
+            #    inv_log_rootfinding_fn,
+
+            # )
+            raise ValueError("Not implemented for InverseLog")
+
+
+def inv_log_rootfinding_fn(temp_0: float, temp_n: float, time_n: float, b: float):
+    return (np.log10(b) / np.log10(b + time_n)) - (temp_n / temp_0)
+
+
+def inv_log_rootfinding_jac(_temp_0: float, _temp_n: float, time_n: float, b: float):
+    numerator = (np.log(b + time_n) / b) - (
+        np.log(b) / (b + time_n) * np.log(b + time_n)
+    )
+    return numerator / (np.log(b + time_n) ** 2)
 
 
 def inverse_log_cooling(t, a, b):
