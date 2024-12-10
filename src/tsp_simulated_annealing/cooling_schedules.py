@@ -12,6 +12,7 @@ from enum import StrEnum
 from functools import partial
 
 import numpy as np
+from scipy import optimize
 
 
 class Cooling(StrEnum):
@@ -20,31 +21,62 @@ class Cooling(StrEnum):
     InverseLog = "inverse_log"
 
 
-def get_scheduler(temp_0: float, temp_n: float, time_n: float, algorithm: Cooling):
+def get_scheduler(
+    init_temp: float,
+    final_temp: float,
+    time_n: float,
+    algorithm: Cooling,
+):
     match algorithm:
         case Cooling.Linear:
-            eta = (temp_0 - temp_n) / time_n
-            return partial(linear_cooling, eta=eta, T_0=temp_0)
+            eta = fit_linear(init_temp, final_temp, time_n)
+            fn = partial(linear_cooling, eta=eta, T_0=init_temp)
         case Cooling.Exponential:
-            alpha = np.pow(temp_n / temp_0, time_n)
-            return partial(exponential_cooling, alpha=alpha, T_0=temp_0)
+            alpha = fit_exponential(init_temp, final_temp, time_n)
+            fn = partial(exponential_cooling, alpha=alpha, T_0=init_temp)
         case Cooling.InverseLog:
-            # b = optimize.root_scalar(
-            #    inv_log_rootfinding_fn,
+            a, b = fit_inverse_log(init_temp, final_temp, time_n)
+            fn = partial(inverse_log_cooling, a=a, b=b)
 
-            # )
-            raise ValueError("Not implemented for InverseLog")
-
-
-def inv_log_rootfinding_fn(temp_0: float, temp_n: float, time_n: float, b: float):
-    return (np.log10(b) / np.log10(b + time_n)) - (temp_n / temp_0)
+    return fn
 
 
-def inv_log_rootfinding_jac(_temp_0: float, _temp_n: float, time_n: float, b: float):
-    numerator = (np.log(b + time_n) / b) - (
-        np.log(b) / (b + time_n) * np.log(b + time_n)
-    )
-    return numerator / (np.log(b + time_n) ** 2)
+def fit_linear(init_temp, final_temp, n_samples) -> float:
+    """Determine eta which fits initial conditions."""
+    return (init_temp - final_temp) / (n_samples - 1)
+
+
+def fit_exponential(init_temp, final_temp, n_samples) -> float:
+    """Determine alpha which fits initial conditions."""
+    return np.exp((np.log(final_temp) - np.log(init_temp)) / (n_samples - 1))
+
+
+def fit_inverse_log(init_temp, final_temp, n_samples) -> tuple[float, float]:
+    """Determine a and b which fit initial conditions.
+
+    This requires the use of a root-finding method to solve the equation:
+
+    b^(T0/Tn) - b - n = 0
+
+    From which we can calculate a:
+
+    a = T0 log(b)
+    """
+    # define k = T0/Tn
+    k = init_temp / final_temp
+
+    def f(b):
+        return b**k - b - (n_samples - 1)
+
+    # Attempt to find root
+    result = optimize.root_scalar(f, bracket=[0, 2], method="brentq")
+    if not result.converged:
+        raise ValueError("Solving for 'b' failed to converge.")
+    b = result.root
+
+    a = init_temp * np.log(b)
+
+    return (a, b)
 
 
 def inverse_log_cooling(t, a, b):
