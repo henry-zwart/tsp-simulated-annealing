@@ -12,6 +12,10 @@ File description:
 import numpy as np
 
 
+def guarantee(h_next, h_current, T):
+    return 1
+
+
 def acceptance(h_next, h_current, T):
     """Acceptance calculates alpha.
     Alpha determines wheter we accept or reject the adapted route if
