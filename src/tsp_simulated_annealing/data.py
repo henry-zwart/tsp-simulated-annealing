@@ -25,6 +25,11 @@ class ProblemData:
         """Calculate the total distance (cost) of a solution."""
         return distance_route(route, self.locations)
 
+    def distance_many(self, routes: np.ndarray) -> np.ndarray:
+        """Calculate total distance (cost) for each solution in an array."""
+        distances = [distance_route(r, self.locations) for r in routes]
+        return np.array(distances)
+
     def optimal_distance(self) -> int:
         """Calculate the optimal route cost."""
         return self.distance(self.optimal_tour)

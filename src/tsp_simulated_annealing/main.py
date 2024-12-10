@@ -114,15 +114,13 @@ def two_opt(solution, seed):
     return np.array([int(x) for x in new_solution])
 
 
-def distance_route(solution, coordinates):
+def distance_route(solution, coordinates) -> int:
     """For a certain route and a list of the point coordinates,
     the route distance is calculated."""
     total_dis = 0
     for i in range(len(solution) - 1):
         total_dis += distance_two_nodes(solution[i], solution[i + 1], coordinates)
-    # adds dis between first and last node (making a cicle)
-    # total_dis += distance_two_nodes(solution[0], solution[-1], coordinates)
-    return total_dis
+    return int(total_dis)
 
 
 def main_algorithm(data, markov_chain_length, cooling_schedule, T_0, rng, acceptance):
