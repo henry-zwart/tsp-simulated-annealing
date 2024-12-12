@@ -28,8 +28,8 @@ def average_increase(
         state = s0
         dist = distance_route(s0, locations)
         for _ in range(iters):
-            new_state = two_opt(state, 125)
-            new_dist = distance_route(new_state, locations)
+            new_state, dist_delta = two_opt(state, locations, 125)
+            new_dist = dist + dist_delta
 
             if new_dist > dist:
                 increases.append(new_dist - dist)
@@ -134,8 +134,8 @@ def solve_tsp(
     dist = problem.distance(state)
     for time in range(cool_time):
         for _ in range(iters_per_temp):
-            new_state = two_opt(state, 125)
-            new_dist = problem.distance(new_state)
+            new_state, dist_delta = two_opt(state, problem.locations, 125)
+            new_dist = dist + dist_delta
             # states.append(new_state)
 
             alpha = acceptance(new_dist, dist, temperature)
