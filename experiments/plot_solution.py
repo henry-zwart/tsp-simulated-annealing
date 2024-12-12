@@ -15,7 +15,7 @@ def main():
     # Sample an initial state
     initial_solution = problem.random_solution(rng)
 
-    fig, ax = plt.subplots()
+    plot_states = [0, 250, 1000, -1]
 
     # Solve for each cooling schedule, printing the final solution and cost
     n_samples = 300
@@ -37,9 +37,32 @@ def main():
         print(f"Error: {cost - problem.optimal_distance()}")
         print()
 
-        ax.plot(np.arange(cool_time), problem.distance_many(states))
+        fig, axes = plt.subplots(
+            1,
+            4,
+            sharex=True,
+            sharey=True,
+            subplot_kw=dict(box_aspect=1),
+            figsize=(12, 4),
+        )
+        for state_idx, ax in zip(plot_states, axes, strict=False):
+            solution_coords = problem.locations[states[state_idx]]
+            ax.scatter(
+                problem.locations[:, 0],
+                problem.locations[:, 1],
+                c="red",
+                s=5,
+                label="Cities",
+            )
+            ax.plot(
+                solution_coords[:, 0],
+                solution_coords[:, 1],
+                "-",
+                label="Solution",
+                linewidth=0.5,
+            )
 
-    fig.savefig("cost.png", dpi=700)
+        fig.savefig(f"solutions_{algorithm}.png", dpi=700)
 
 
 if __name__ == "__main__":

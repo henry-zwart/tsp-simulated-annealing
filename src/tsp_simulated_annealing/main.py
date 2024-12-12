@@ -86,7 +86,7 @@ def make_initial_solution(highest_id, rng):
     return np.array([int(x) for x in sol])
 
 
-def two_opt(solution, seed):
+def two_opt(solution, locations, seed):
     """The two-opt algorithm. Two-opt takes two non-adjecent edges and "cuts"
     the link in between both edges and reverses the resulting middle chain of nodes
     , attaching them to the other detached node.
@@ -111,7 +111,19 @@ def two_opt(solution, seed):
             index_edge_2 + 1 : index_edge_1 + 1
         ][::-1]
 
-    return np.array([int(x) for x in new_solution])
+    c1, c2, c3, c4 = (
+        solution[index_edge_1],
+        solution[index_edge_1 + 1],
+        solution[index_edge_2],
+        solution[index_edge_2 + 1],
+    )
+    subtract_cost = distance_two_nodes(c1, c2, locations) + distance_two_nodes(
+        c3, c4, locations
+    )
+    add_cost = distance_two_nodes(c1, c3, locations) + distance_two_nodes(
+        c2, c4, locations
+    )
+    return np.array([int(x) for x in new_solution]), add_cost - subtract_cost
 
 
 def distance_route(solution, coordinates) -> int:
@@ -134,8 +146,8 @@ def main_algorithm(data, markov_chain_length, cooling_schedule, T_0, rng, accept
     print("initial sol: ", cur_sol)
     cur_dis = distance_route(cur_sol, coordinates)
     for t in range(1, markov_chain_length):
-        new_sol = two_opt(cur_sol, rng)
-        new_dis = distance_route(new_sol, coordinates)
+        new_sol, dist_delta = two_opt(cur_sol, coordinates, rng)
+        new_dis = cur_dis + dist_delta
 
         if new_dis < cur_dis:
             cur_sol = new_sol
