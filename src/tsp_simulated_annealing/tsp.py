@@ -85,9 +85,9 @@ def tune_temperature(
 def solve_tsp(
     s0: np.ndarray,
     problem: ProblemData,
-    max_samples: int,
     cooling_algo: Cooling,
     cool_time: int,
+    iters_per_temp: int = 1,
     init_temp: float | None = None,
     final_temp: float | None = None,
     init_accept: float = 0.95,
@@ -122,6 +122,7 @@ def solve_tsp(
         )
         init_temp = init_temp or temp_tune_results.initial
         final_temp = final_temp or temp_tune_results.final
+        final_temp = init_temp / 1000
 
     update_temperature = get_scheduler(init_temp, final_temp, cool_time, cooling_algo)
 
@@ -131,16 +132,20 @@ def solve_tsp(
     temperature = init_temp
     state = s0
     dist = problem.distance(state)
-    for i in range(max_samples):
-        new_state = two_opt(state, 125)
-        new_dist = problem.distance(new_state)
+    for time in range(cool_time):
+        for _ in range(iters_per_temp):
+            new_state = two_opt(state, 125)
+            new_dist = problem.distance(new_state)
+            # states.append(new_state)
 
-        alpha = acceptance(new_dist, dist, temperature)
-        if new_dist < dist or np.random.uniform(0, 1) < alpha:
-            state = new_state
-            dist = new_dist
-            states.append(state)
+            alpha = acceptance(new_dist, dist, temperature)
+            if new_dist < dist or np.random.uniform(0, 1) < alpha:
+                state = new_state
+                dist = new_dist
 
-        temperature = update_temperature(i)
+        states.append(state)
+        temperature = update_temperature(time)
+        if temperature < final_temp:
+            break
 
     return np.array(states)
