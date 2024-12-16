@@ -8,6 +8,7 @@ File description:
     This file contains all the cooling schedules researched in our paper.
 """
 
+import math
 from enum import StrEnum
 from functools import partial
 
@@ -43,7 +44,7 @@ def get_scheduler(
 
 def fit_linear(init_temp, final_temp, n_samples) -> float:
     """Determine eta which fits initial conditions."""
-    return (init_temp - final_temp) / (n_samples - 1)
+    return (init_temp - final_temp) / n_samples
 
 
 def fit_exponential(init_temp, final_temp, n_samples) -> float:
@@ -66,10 +67,11 @@ def fit_inverse_log(init_temp, final_temp, n_samples) -> tuple[float, float]:
     k = init_temp / final_temp
 
     def f(b):
-        return b**k - b - (n_samples - 1)
+        # return b**k - b - (n_samples - 1)
+        return k * math.log(b) - math.log(b + n_samples - 1)
 
     # Attempt to find root
-    result = optimize.root_scalar(f, bracket=[0, 2], method="brentq")
+    result = optimize.root_scalar(f, bracket=[0.001, 2], method="brentq")
     if not result.converged:
         raise ValueError("Solving for 'b' failed to converge.")
     b = result.root
