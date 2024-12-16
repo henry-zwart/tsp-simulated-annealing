@@ -28,7 +28,6 @@ def main():
             cool_time,
             rng,
             n_samples,
-            final_accept=0.001,
         )
 
 

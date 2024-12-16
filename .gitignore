@@ -211,4 +211,5 @@ data/.ex2_data
 data/.ex4_data
 .make-figures
 .ex2-figures
+*.meta
 bibtex.bib

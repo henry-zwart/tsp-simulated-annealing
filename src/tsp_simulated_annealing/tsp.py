@@ -56,12 +56,9 @@ def tune_temperature(
     s0: np.ndarray,
     problem: ProblemData,
     init_accept: float,
-    final_accept: float,
     rng: np.random.Generator,
-    warmup_iters_init: int = 100,
-    warmup_repeats_init: int = 100,
-    warmup_iters_final: int = 10,
-    warmup_repeats_final: int = 1000,
+    warmup_iters: int = 100,
+    warmup_repeats: int = 100,
 ) -> TemperatureTuneResult:
     """
     Calculate the initial temperature which yields a desired initial accept probability.
@@ -74,24 +71,17 @@ def tune_temperature(
     Where p is the desired initial acceptance probability.
     """
     avg_incr_init = average_increase(
-        s0, problem.locations, warmup_iters_init, warmup_repeats_init, rng
+        s0, problem.locations, warmup_iters, warmup_repeats, rng
     )
     init_temp = -avg_incr_init / np.log(init_accept)
 
-    avg_incr_final = average_increase(
-        problem.optimal_tour,
-        problem.locations,
-        warmup_iters_final,
-        warmup_repeats_final,
-        rng,
-    )
-    final_temp = -avg_incr_final / np.log(final_accept)
+    final_temp = init_temp / 1000
 
     return TemperatureTuneResult(
         initial=init_temp.mean(),
         final=final_temp.mean(),
-        initial_ci=1.97 * init_temp.std(ddof=1) / np.sqrt(warmup_repeats_init),
-        final_ci=1.97 * final_temp.std(ddof=1) / np.sqrt(warmup_repeats_final),
+        initial_ci=1.97 * init_temp.std(ddof=1) / np.sqrt(warmup_repeats),
+        final_ci=1.97 * final_temp.std(ddof=1) / np.sqrt(warmup_repeats),
     )
 
 
@@ -105,11 +95,8 @@ def solve_tsp(
     init_temp: float | None = None,
     final_temp: float | None = None,
     init_accept: float = 0.95,
-    final_accept: float = 0.01,
-    warmup_iters_init: int = 100,
-    warmup_repeats_init: int = 100,
-    warmup_iters_final: int = 100,
-    warmup_repeats_final: int = 100,
+    warmup_iters: int = 100,
+    warmup_repeats: int = 100,
 ) -> OptimisationResult:
     """
     Solve a TSP problem with simulated annealing.
@@ -129,12 +116,9 @@ def solve_tsp(
             s0,
             problem,
             init_accept,
-            final_accept,
             rng,
-            warmup_iters_init,
-            warmup_repeats_init,
-            warmup_iters_final,
-            warmup_repeats_final,
+            warmup_iters,
+            warmup_repeats,
         )
         init_temp = init_temp or temp_tune_results.initial
         final_temp = final_temp or temp_tune_results.final
