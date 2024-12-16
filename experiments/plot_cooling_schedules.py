@@ -38,7 +38,14 @@ plt.rc("xtick", labelsize=14)
 plt.rc("ytick", labelsize=14)
 plt.rc("axes", labelsize=18)
 
-fig, axes = plt.subplots(ncols=3, nrows=2, figsize=(12, 12), sharex=True, sharey="row")
+fig, axes = plt.subplots(
+    ncols=3,
+    nrows=2,
+    figsize=(12, 5),
+    gridspec_kw={"height_ratios": [1, 2]},
+    sharex=True,
+    sharey="row",
+)
 
 t = []
 t.append(np.arange(0, 500))
@@ -83,4 +90,4 @@ axes[1, 1].set_xlabel("Time")
 # fig.supylabel("T", fontsize=20)
 fig.tight_layout()
 plt.show()
-# plt.savefig("figures/plot_temperature.png", dpi=300)
+fig.savefig("plot_temperature.pdf", dpi=300)
