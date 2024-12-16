@@ -24,6 +24,7 @@ def main():
         temp_tune_results = tune_temperature(
             s0,
             problem,
+            rng=rng,
             init_accept=init_accept,
             final_accept=final_accept,
             warmup_repeats_init=100,

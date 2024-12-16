@@ -16,19 +16,21 @@ def main():
     optimal_dist = problem.optimal_distance()
 
     # Solve for each cooling schedule, printing the final solution and cost
-    n_samples = 1  # How long we stay at one temperature
+    n_samples = 1000  # How long we stay at one temperature
     for cool_time in [500, 1000, 2000]:
         for algorithm in Cooling:
             print(f"Solving with {algorithm}, chain-length = {n_samples}...")
-            states = solve_tsp(
+            results = solve_tsp(
                 initial_solution,
                 problem,
                 algorithm,
                 cool_time,
+                rng,
                 n_samples,
                 final_accept=0.001,
             )
             errors = []
+            states = results.states
             for i in range(len(states)):
                 cost = problem.distance(states[i])
                 error = cost - optimal_dist
