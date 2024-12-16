@@ -17,10 +17,10 @@ def main():
     optimal_cost = problem.optimal_distance()
 
     # Varying chain length, balancing total work
-    n_iters = 15
+    n_iters = 1500
     chain_lengths = np.arange(0, 301, 25, dtype=np.int64)
     chain_lengths[0] += 1
-    repeats = 15
+    repeats = 30
 
     # Configure cooling algorithms
     temperatures = tune_temperature(
