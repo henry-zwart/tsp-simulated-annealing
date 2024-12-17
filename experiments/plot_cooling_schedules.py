@@ -2,6 +2,9 @@
 # 3 subplots, each subplot one cooling schedule a280
 # each subplot 3 times 500, 1000, 2000
 
+import json
+from pathlib import Path
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -42,15 +45,16 @@ fig, axes = plt.subplots(
     ncols=3,
     nrows=2,
     figsize=(12, 5),
+    layout="constrained",
     gridspec_kw={"height_ratios": [1, 2]},
     sharex=True,
     sharey="row",
 )
 
 t = []
-t.append(np.arange(0, 500))
-t.append(np.arange(0, 1000))
-t.append(np.arange(0, 2000))
+t.append(np.arange(0, 501))
+t.append(np.arange(0, 1001))
+t.append(np.arange(0, 2001))
 
 axes[0, 0].set_title("Lin")
 axes[0, 1].set_title("Exp")
@@ -71,12 +75,25 @@ for i in range(3):
         label=f"a = {a[i]:.2f}, b = {b[i]:.2f}",
     )
 
-    axes[1, 0].plot(t[i], lin_error[i])
-    axes[1, 1].plot(t[i], exp_error[i])
-    axes[1, 2].plot(
-        t[i],
-        log_error[i],
-    )
+    lin_mean = lin_error[i].mean(axis=0)
+    lin_std = lin_error[i].std(axis=0, ddof=1)
+    axes[1, 0].plot(t[i], lin_mean, linewidth=0.5)
+    axes[1, 0].fill_between(t[i], lin_mean - lin_std, lin_mean + lin_std, alpha=0.5)
+    # axes[1, 0].plot(t[i], lin_error[i].T)
+    exp_mean = exp_error[i].mean(axis=0)
+    exp_std = exp_error[i].std(axis=0, ddof=1)
+    axes[1, 1].plot(t[i], exp_mean, linewidth=0.5)
+    axes[1, 1].fill_between(t[i], exp_mean - exp_std, exp_mean + exp_std, alpha=0.5)
+
+    log_mean = log_error[i].mean(axis=0)
+    log_std = log_error[i].std(axis=0, ddof=1)
+    axes[1, 2].plot(t[i], log_mean, linewidth=0.5)
+    axes[1, 2].fill_between(t[i], log_mean - log_std, log_mean + log_std, alpha=0.5)
+    # axes[1, 1].plot(t[i], exp_error[i].T)
+    # axes[1, 2].plot(
+    #    t[i],
+    #    log_error[i].T,
+    # )
 
 axes[0, 0].legend(prop={"size": 12})
 axes[0, 1].legend(prop={"size": 12})
@@ -85,9 +102,14 @@ axes[0, 2].legend(prop={"size": 12})
 axes[0, 0].set_ylabel("Temperature")
 axes[1, 0].set_ylabel("Error")
 axes[1, 1].set_xlabel("Time")
+axes[1, 0].set_yscale("log")
+axes[1, 0].set_ylim(100, None)
 
 # fig.supxlabel(r"Time", fontsize=20)
 # fig.supylabel("T", fontsize=20)
-fig.tight_layout()
-plt.show()
-fig.savefig("plot_temperature.pdf", dpi=300)
+# fig.tight_layout()
+# plt.show()
+fig.savefig("results/figures/plot_temperature.pdf", dpi=300)
+
+with Path("data/cooling.meta").open("w") as f:
+    json.dump({"n_samples": [500, 1000, 2000]}, f)

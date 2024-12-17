@@ -127,13 +127,17 @@ def solve_tsp(
     update_temperature = get_scheduler(init_temp, final_temp, cool_time, cooling_algo)
 
     # Data records
-    states = np.zeros((cool_time, len(s0)), dtype=np.int64)
+    states = np.zeros((cool_time + 1, len(s0)), dtype=np.int64)
+    states[0] = s0
 
     temperature = init_temp
     state = s0
     new_state = state.copy()
     dist = problem.distance(state)
-    for time in range(cool_time):
+    for time in range(cool_time + 1):
+        states[time] = state
+        temperature = update_temperature(time)
+
         for _ in range(iters_per_temp):
             new_state, dist_delta = two_opt(state, problem.locations, rng)
             new_dist = dist + dist_delta
@@ -142,11 +146,6 @@ def solve_tsp(
             if new_dist < dist or rng.uniform(0, 1) < alpha:
                 state = new_state
                 dist = new_dist
-
-        states[time] = state
-        temperature = update_temperature(time)
-        if temperature < final_temp:
-            break
 
     return OptimisationResult(
         initial_state=s0,
