@@ -11,7 +11,7 @@ FIGURES = $(patsubst %, results/figures/%, $(FIGURE_NAMES))
 
 ENTRYPOINT ?= uv run
 
-all: results/plot_metadata.json results/experiment_metadata.json
+all: results/plot_metadata.json results/experiment_metadata.json data/cooling.meta
 
 results/plot_metadata.json: experiments/plots.py results/experiment_metadata.json | $(FIGURES_DIR)
 	$(ENTRYPOINT) $<
@@ -26,8 +26,20 @@ results/experiment_metadata.json: \
 			| $(FIGURES_DIR)
 	$(ENTRYPOINT) $<
 
+
+data/cooling.meta: \
+			experiments/parameterisation_data_prep.py \
+			experiments/error_CS_data_prep.py \
+			experiments/plot_cooling_schedules.py \
+			| $(FIGURES_DIR)
+	$(ENTRYPOINT) experiments/parameterisation_data_prep.py && \
+	$(ENTRYPOINT) experiments/error_CS_data_prep.py && \
+	$(ENTRYPOINT) experiments/plot_cooling_schedules.py
+
+
 data/%.meta: experiments/%.py | $(DATA_DIR)
 	$(ENTRYPOINT) $<
+
 
 
 $(DATA_DIR):
