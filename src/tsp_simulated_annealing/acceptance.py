@@ -9,7 +9,7 @@ File description:
     route will be accepted.
 """
 
-import numpy as np
+from scipy.special import expit
 
 
 def guarantee(h_next, h_current, T):
@@ -20,6 +20,6 @@ def acceptance(h_next, h_current, T):
     """Acceptance calculates alpha.
     Alpha determines wheter we accept or reject the adapted route if
     the total distance is greater then the previous route."""
-    alpha = np.exp((-h_next + h_current) / T)
+    alpha = expit((-h_next + h_current) / T)
 
     return alpha

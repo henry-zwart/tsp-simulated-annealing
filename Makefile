@@ -1,49 +1,50 @@
 FIGURES_DIR = results/figures
 DATA_DIR = data
 
+COOLING = linear exponential inverse_log
+CHAIN_LENGTHS = 200 1500
 FIGURE_NAMES = \
-	mandelbrot.png \
-	relative_change.png \
-	convergence_error.png \
-	sampler_examples.png \
-	sampler_estimates.png \
-	sampler_convergence.png
+	chain_length_error.pdf \
+	$(patsubst %, %_trace.pdf, $(COOLING)) \
+	$(patsubst %, %_dist.pdf, $(COOLING))
 
 FIGURES = $(patsubst %, results/figures/%, $(FIGURE_NAMES))
 
 ENTRYPOINT ?= uv run
 
-all: results/plot_metadata.json results/experiment_metadata.json
+all: results/plot_metadata.json results/experiment_metadata.json data/cooling.meta
 
-results/plot_metadata.json: scripts/plot_results.py results/experiment_metadata.json | $(FIGURES_DIR)
-	$(ENTRYPOINT) $<
+results/plot_metadata.json: experiments/plots.py results/experiment_metadata.json | $(FIGURES_DIR)
+	$(ENTRYPOINT) $< $(CHAIN_LENGTHS)
 
 $(FIGURES_DIR):
 	mkdir -p $@
 
 results/experiment_metadata.json: \
 			scripts/combine_metadata.py \
-			data/mandelbrot/metadata.json \
-			data/shape_convergence/metadata.json \
-			data/joint_convergence/metadata.json \
-			data/sample_convergence/metadata.json \
-			data/sample_adaptive/metadata.json
+			data/chain_length_error.meta \
+			$(patsubst %, data/markov_chains_%.meta, $(CHAIN_LENGTHS)) \
+			| $(FIGURES_DIR)
 	$(ENTRYPOINT) $<
 
-data/mandelbrot/metadata.json: scripts/deterministic_mandelbrot.py | $(DATA_DIR)
+
+data/cooling.meta: \
+			experiments/parameterisation_data_prep.py \
+			experiments/error_CS_data_prep.py \
+			experiments/plot_cooling_schedules.py \
+			| $(FIGURES_DIR)
+	$(ENTRYPOINT) experiments/parameterisation_data_prep.py && \
+	$(ENTRYPOINT) experiments/error_CS_data_prep.py && \
+	$(ENTRYPOINT) experiments/plot_cooling_schedules.py
+
+
+data/markov_chains_%.meta: experiments/markov_chains.py | $(DATA_DIR)
+	$(ENTRYPOINT) $< $*
+
+data/%.meta: experiments/%.py | $(DATA_DIR)
 	$(ENTRYPOINT) $<
 
-data/shape_convergence/metadata.json: scripts/measure_shape_convergence.py | $(DATA_DIR)
-	$(ENTRYPOINT) $<
 
-data/joint_convergence/metadata.json: scripts/measure_joint_convergence.py data/shape_convergence/metadata.json | $(DATA_DIR)
-	$(ENTRYPOINT) $<
-
-data/sample_convergence/metadata.json: scripts/measure_sample_convergence.py data/shape_convergence/metadata.json | $(DATA_DIR)
-	$(ENTRYPOINT) $<
-
-data/sample_adaptive/metadata.json: scripts/sample_adaptive.py data/shape_convergence/metadata.json | $(DATA_DIR)
-	$(ENTRYPOINT) $<
 
 $(DATA_DIR):
 	mkdir -p $@

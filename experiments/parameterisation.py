@@ -11,7 +11,7 @@ from tsp_simulated_annealing.tsp import tune_temperature
 
 def main():
     rng = np.random.default_rng(25)
-    init_accept = 0.95
+    init_accept = 0.8
     final_accept = 0.01
     n_samples = 1000
 

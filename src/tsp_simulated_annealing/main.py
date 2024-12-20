@@ -13,6 +13,7 @@ import math
 from pathlib import Path
 
 import numpy as np
+from numba import njit
 
 rng = np.random.default_rng(seed=42)
 
@@ -70,6 +71,7 @@ def show_data(nodes):
         print(f"id: {node.id}, x: {node.x}, y: {node.y}")
 
 
+@njit()
 def distance_two_nodes(id1, id2, coordinates):
     """Calculates the distance between two nodes."""
     x1, y1 = coordinates[id1]
@@ -86,44 +88,41 @@ def make_initial_solution(highest_id, rng):
     return np.array([int(x) for x in sol])
 
 
-def two_opt(solution, locations, seed):
-    """The two-opt algorithm. Two-opt takes two non-adjecent edges and "cuts"
-    the link in between both edges and reverses the resulting middle chain of nodes
-    , attaching them to the other detached node.
-    """
-    new_solution = solution.copy()
-
-    index_edge_1 = rng.integers(0, len(solution) - 1)
+def sample_non_adjacent(low, high, rng: np.random.Generator):
+    i = rng.integers(low, high)
     while True:
-        index_edge_2 = rng.integers(0, len(solution) - 1)
-        # checks edges are nonadjecent
-        if index_edge_1 - 1 > index_edge_2 or index_edge_2 > index_edge_1 + 1:
+        j = rng.integers(low, high)
+        if abs(i - j) > 1:
             break
+    if i < j:
+        return i, j
+    return j, i
 
-    # print(f"index_edge_1: {index_edge_1}, index_edge_2: {index_edge_2}")
 
-    if index_edge_1 < index_edge_2:
-        new_solution[index_edge_1 + 1 : index_edge_2 + 1] = solution[
-            index_edge_1 + 1 : index_edge_2 + 1
-        ][::-1]
-    else:
-        new_solution[index_edge_2 + 1 : index_edge_1 + 1] = solution[
-            index_edge_2 + 1 : index_edge_1 + 1
-        ][::-1]
+@njit()
+def reverse_route(solution, idx_1, idx_2, locations, new_solution):
+    new_solution[idx_1 : idx_2 + 1] = new_solution[idx_1 : idx_2 + 1][::-1]
+    c1, c2 = solution[idx_1 - 1], solution[idx_1]
+    c3, c4 = solution[idx_2], solution[idx_2 + 1]
 
-    c1, c2, c3, c4 = (
-        solution[index_edge_1],
-        solution[index_edge_1 + 1],
-        solution[index_edge_2],
-        solution[index_edge_2 + 1],
-    )
-    subtract_cost = distance_two_nodes(c1, c2, locations) + distance_two_nodes(
+    old_edge_cost = distance_two_nodes(c1, c2, locations) + distance_two_nodes(
         c3, c4, locations
     )
-    add_cost = distance_two_nodes(c1, c3, locations) + distance_two_nodes(
+    new_edge_cost = distance_two_nodes(c1, c3, locations) + distance_two_nodes(
         c2, c4, locations
     )
-    return np.array([int(x) for x in new_solution]), add_cost - subtract_cost
+    return new_solution, (new_edge_cost - old_edge_cost)
+
+
+def two_opt(solution, locations, rng: np.random.Generator):
+    idx_1, idx_2 = sample_non_adjacent(1, len(solution) - 1, rng)
+    new_solution = solution.copy()
+
+    new_solution, cost_update = reverse_route(
+        solution, idx_1, idx_2, locations, new_solution
+    )
+
+    return new_solution, cost_update
 
 
 def distance_route(solution, coordinates) -> int:

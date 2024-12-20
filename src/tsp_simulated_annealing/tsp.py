@@ -16,19 +16,30 @@ class TemperatureTuneResult:
     final_ci: float
 
 
+@dataclass
+class OptimisationResult:
+    initial_state: np.ndarray
+    initial_temp: float
+    final_temp: float
+    temperature_steps: int
+    states: np.ndarray
+
+
 def average_increase(
     s0: np.ndarray,
     locations: np.ndarray,
     iters: int,
     repeats: int,
+    rng: np.random.Generator,
 ) -> np.ndarray:
     avg_increases = []
     for _ in range(repeats):
         increases = []
         state = s0
+        new_state = state.copy()
         dist = distance_route(s0, locations)
         for _ in range(iters):
-            new_state, dist_delta = two_opt(state, locations, 125)
+            new_state, dist_delta = two_opt(state, locations, rng)
             new_dist = dist + dist_delta
 
             if new_dist > dist:
@@ -45,11 +56,9 @@ def tune_temperature(
     s0: np.ndarray,
     problem: ProblemData,
     init_accept: float,
-    final_accept: float,
-    warmup_iters_init: int = 100,
-    warmup_repeats_init: int = 100,
-    warmup_iters_final: int = 10,
-    warmup_repeats_final: int = 1000,
+    rng: np.random.Generator,
+    warmup_iters: int = 100,
+    warmup_repeats: int = 100,
 ) -> TemperatureTuneResult:
     """
     Calculate the initial temperature which yields a desired initial accept probability.
@@ -62,23 +71,17 @@ def tune_temperature(
     Where p is the desired initial acceptance probability.
     """
     avg_incr_init = average_increase(
-        s0, problem.locations, warmup_iters_init, warmup_repeats_init
+        s0, problem.locations, warmup_iters, warmup_repeats, rng
     )
     init_temp = -avg_incr_init / np.log(init_accept)
 
-    avg_incr_final = average_increase(
-        problem.optimal_tour,
-        problem.locations,
-        warmup_iters_final,
-        warmup_repeats_final,
-    )
-    final_temp = -avg_incr_final / np.log(final_accept)
+    final_temp = init_temp / 1000
 
     return TemperatureTuneResult(
         initial=init_temp.mean(),
         final=final_temp.mean(),
-        initial_ci=1.97 * init_temp.std(ddof=1) / np.sqrt(warmup_repeats_init),
-        final_ci=1.97 * final_temp.std(ddof=1) / np.sqrt(warmup_repeats_final),
+        initial_ci=1.97 * init_temp.std(ddof=1) / np.sqrt(warmup_repeats),
+        final_ci=1.97 * final_temp.std(ddof=1) / np.sqrt(warmup_repeats),
     )
 
 
@@ -87,16 +90,14 @@ def solve_tsp(
     problem: ProblemData,
     cooling_algo: Cooling,
     cool_time: int,
+    rng: np.random.Generator,
     iters_per_temp: int = 1,
     init_temp: float | None = None,
     final_temp: float | None = None,
     init_accept: float = 0.95,
-    final_accept: float = 0.01,
-    warmup_iters_init: int = 100,
-    warmup_repeats_init: int = 100,
-    warmup_iters_final: int = 100,
-    warmup_repeats_final: int = 100,
-) -> np.ndarray:
+    warmup_iters: int = 100,
+    warmup_repeats: int = 100,
+) -> OptimisationResult:
     """
     Solve a TSP problem with simulated annealing.
 
@@ -110,15 +111,14 @@ def solve_tsp(
     drops below a specified threshold.
     """
     if init_temp is None or final_temp is None:
+        print("Tuning temperature")
         temp_tune_results = tune_temperature(
             s0,
             problem,
             init_accept,
-            final_accept,
-            warmup_iters_init,
-            warmup_repeats_init,
-            warmup_iters_final,
-            warmup_repeats_final,
+            rng,
+            warmup_iters,
+            warmup_repeats,
         )
         init_temp = init_temp or temp_tune_results.initial
         final_temp = final_temp or temp_tune_results.final
@@ -127,25 +127,58 @@ def solve_tsp(
     update_temperature = get_scheduler(init_temp, final_temp, cool_time, cooling_algo)
 
     # Data records
-    states = []
+    states = np.zeros((cool_time + 1, len(s0)), dtype=np.int64)
+    states[0] = s0
 
     temperature = init_temp
     state = s0
+    new_state = state.copy()
     dist = problem.distance(state)
-    for time in range(cool_time):
+    for time in range(cool_time + 1):
+        states[time] = state
+        temperature = update_temperature(time)
+
         for _ in range(iters_per_temp):
-            new_state, dist_delta = two_opt(state, problem.locations, 125)
+            new_state, dist_delta = two_opt(state, problem.locations, rng)
             new_dist = dist + dist_delta
-            # states.append(new_state)
 
             alpha = acceptance(new_dist, dist, temperature)
-            if new_dist < dist or np.random.uniform(0, 1) < alpha:
+            if new_dist < dist or rng.uniform(0, 1) < alpha:
                 state = new_state
                 dist = new_dist
 
-        states.append(state)
-        temperature = update_temperature(time)
-        if temperature < final_temp:
-            break
+    return OptimisationResult(
+        initial_state=s0,
+        initial_temp=init_temp,
+        final_temp=final_temp,
+        temperature_steps=cool_time + 1,
+        states=states,
+    )
 
-    return np.array(states)
+
+def sample_at_temperature(
+    s0: np.ndarray,
+    problem: ProblemData,
+    n_samples: int,
+    temperature: float,
+    rng: np.random.Generator,
+) -> np.ndarray:
+    """Sample from the Markov chain at fixed temperature."""
+    # Data records
+    states = np.zeros((n_samples, len(s0)), dtype=np.int64)
+    states[0] = s0
+
+    state = s0
+    new_state = state.copy()
+    dist = problem.distance(state)
+    for i in range(n_samples):
+        new_state, dist_delta = two_opt(state, problem.locations, rng)
+        new_dist = dist + dist_delta
+
+        alpha = acceptance(new_dist, dist, temperature)
+        if new_dist < dist or rng.uniform(0, 1) < alpha:
+            state = new_state
+            dist = new_dist
+        states[i] = state
+
+    return states

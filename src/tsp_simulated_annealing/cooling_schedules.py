@@ -8,6 +8,7 @@ File description:
     This file contains all the cooling schedules researched in our paper.
 """
 
+import math
 from enum import StrEnum
 from functools import partial
 
@@ -29,13 +30,13 @@ def get_scheduler(
 ):
     match algorithm:
         case Cooling.Linear:
-            eta = fit_linear(init_temp, final_temp, time_n)
+            eta = fit_linear(init_temp, final_temp, time_n + 1)
             fn = partial(linear_cooling, eta=eta, T_0=init_temp)
         case Cooling.Exponential:
-            alpha = fit_exponential(init_temp, final_temp, time_n)
+            alpha = fit_exponential(init_temp, final_temp, time_n + 1)
             fn = partial(exponential_cooling, alpha=alpha, T_0=init_temp)
         case Cooling.InverseLog:
-            a, b = fit_inverse_log(init_temp, final_temp, time_n)
+            a, b = fit_inverse_log(init_temp, final_temp, time_n + 1)
             fn = partial(inverse_log_cooling, a=a, b=b)
 
     return fn
@@ -43,12 +44,12 @@ def get_scheduler(
 
 def fit_linear(init_temp, final_temp, n_samples) -> float:
     """Determine eta which fits initial conditions."""
-    return (init_temp - final_temp) / (n_samples - 1)
+    return (init_temp - final_temp) / n_samples
 
 
 def fit_exponential(init_temp, final_temp, n_samples) -> float:
     """Determine alpha which fits initial conditions."""
-    return np.exp((np.log(final_temp) - np.log(init_temp)) / (n_samples - 1))
+    return np.exp((np.log(final_temp) - np.log(init_temp)) / (n_samples))
 
 
 def fit_inverse_log(init_temp, final_temp, n_samples) -> tuple[float, float]:
@@ -66,10 +67,11 @@ def fit_inverse_log(init_temp, final_temp, n_samples) -> tuple[float, float]:
     k = init_temp / final_temp
 
     def f(b):
-        return b**k - b - (n_samples - 1)
+        # return b**k - b - (n_samples - 1)
+        return k * math.log(b) - math.log(b + n_samples)
 
     # Attempt to find root
-    result = optimize.root_scalar(f, bracket=[0, 2], method="brentq")
+    result = optimize.root_scalar(f, bracket=[0.001, 2], method="brentq")
     if not result.converged:
         raise ValueError("Solving for 'b' failed to converge.")
     b = result.root
@@ -99,3 +101,17 @@ def linear_cooling(t, eta, T_0):
     """
     T = T_0 - eta * t
     return T
+
+
+def inverse_linear(eta, T_0, T_n):
+    """
+    Calculate the time at which linear cooling reaches a given temperature.
+    """
+    return int(np.round((T_0 - T_n) / eta))
+
+
+def inverse_exponential(alpha, T_0, T_n):
+    """
+    Calculate the time at which exponential cooling reaches a given temperature.
+    """
+    return int(np.round((np.log(T_n / T_0)) / np.log(alpha)))
