@@ -14,7 +14,7 @@ from pathlib import Path
 
 
 def main(data_dir: Path, results_dir: Path, chain_lengths: list[int]):
-    """Function to lead Jason files."""
+    """Function to combine metadata files."""
     big_meta = {}
 
     with (data_dir / "chain_length_error.meta").open("r") as f:

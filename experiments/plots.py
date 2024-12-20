@@ -64,7 +64,7 @@ def main(chain_lengths: list[int]):
         metadata = json.load(f)
     error = np.load(DATA_DIR / "chain_length_error.npy")
     mean_error = error.mean(axis=0)
-    a = error.std(ddof=1, axis=0) / np.sqrt(error.shape[0])
+    a = 1.96 * error.std(ddof=1, axis=0) / np.sqrt(error.shape[0])
     fig, ax = plt.subplots(layout="constrained", figsize=(3, 2.5))
     for i, cooling in enumerate(Cooling):
         ax.plot(
