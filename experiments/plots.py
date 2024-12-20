@@ -1,3 +1,14 @@
+"""
+Course: Stochastic Simulation
+Names: Petr Chalupský, Henry Zwart, Tika van Bennekum
+Student IDs: 15719227, 15393879, 13392425
+Assignement: Solving Traveling Salesman Problem using Simulated Annealing
+
+File description:
+    Produces plots that didn't fall into a certain category.
+    Plots are created from the experiment results.
+"""
+
 import json
 import sys
 from pathlib import Path
@@ -12,6 +23,9 @@ from tsp_simulated_annealing.cooling_schedules import Cooling
 
 
 def main(chain_lengths: list[int]):
+    """
+    Produces plots for experiment results.
+    """
     FONT_SIZE_SMALL = 9
     FONT_SIZE_DEFAULT = 10
 

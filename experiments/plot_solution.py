@@ -1,3 +1,13 @@
+"""
+Course: Stochastic Simulation
+Names: Petr Chalupský, Henry Zwart, Tika van Bennekum
+Student IDs: 15719227, 15393879, 13392425
+Assignement: Solving Traveling Salesman Problem using Simulated Annealing
+
+File description:
+    Creates a visualisation of the solution computed for the TSP.
+"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -7,6 +17,9 @@ from tsp_simulated_annealing.tsp import solve_tsp
 
 
 def main():
+    """
+    Plots a visualisation of the solution computed for the TSP.
+    """
     rng = np.random.default_rng(125)
 
     # Load small problem

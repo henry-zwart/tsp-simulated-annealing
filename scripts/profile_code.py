@@ -1,3 +1,13 @@
+"""
+Course: Stochastic Simulation
+Names: Petr Chalupský, Henry Zwart, Tika van Bennekum
+Student IDs: 15719227, 15393879, 13392425
+Assignement: Solving Traveling Salesman Problem using Simulated Annealing
+
+File description:
+    An experiment is performed for each cooling schedule.
+"""
+
 from cProfile import Profile
 from pstats import SortKey, Stats
 
@@ -9,6 +19,9 @@ from tsp_simulated_annealing.tsp import solve_tsp
 
 
 def main():
+    """
+    Performs an experiment for each cooling schedule.
+    """
     rng = np.random.default_rng(125)
 
     # Load small problem

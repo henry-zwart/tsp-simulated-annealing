@@ -5,7 +5,7 @@ Student IDs: 15719227, 15393879, 13392425
 Assignement: Solving Traveling Salesman Problem using Simulated Annealing
 
 File description:
-    ...
+    File to test manually if functions work by performing it on the smallest data set.
 """
 
 from functools import partial

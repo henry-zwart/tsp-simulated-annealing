@@ -1,3 +1,14 @@
+"""
+Course: Stochastic Simulation
+Names: Petr Chalupský, Henry Zwart, Tika van Bennekum
+Student IDs: 15719227, 15393879, 13392425
+Assignement: Solving Traveling Salesman Problem using Simulated Annealing
+
+File description:
+    This file handles all data.
+    Classes are written to handle the data easily.
+"""
+
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
@@ -74,7 +85,13 @@ class Problem(StrEnum):
         return normalised_tour
 
     def problem_path(self) -> Path:
+        """
+        Load path.
+        """
         return TSP_PROBLEMS / f"{self}.tsp.txt"
 
     def solution_path(self) -> Path:
+        """
+        Load optimal route.
+        """
         return TSP_PROBLEMS / f"{self}.opt.tour.txt"

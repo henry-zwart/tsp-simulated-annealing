@@ -1,3 +1,15 @@
+"""
+Course: Stochastic Simulation
+Names: Petr Chalupský, Henry Zwart, Tika van Bennekum
+Student IDs: 15719227, 15393879, 13392425
+Assignement: Solving Traveling Salesman Problem using Simulated Annealing
+
+File description:
+    In this file the main code functions needed for the experiments is written.
+    Simmulated annealing usign two-opt is implemented.
+    An experiment will call this file to run a simulation of the system.
+"""
+
 from dataclasses import dataclass
 
 import numpy as np
@@ -32,6 +44,9 @@ def average_increase(
     repeats: int,
     rng: np.random.Generator,
 ) -> np.ndarray:
+    """
+    Keeps track of average increase in solution cost.
+    """
     avg_increases = []
     for _ in range(repeats):
         increases = []

@@ -1,3 +1,15 @@
+"""
+Course: Stochastic Simulation
+Names: Petr Chalupský, Henry Zwart, Tika van Bennekum
+Student IDs: 15719227, 15393879, 13392425
+Assignement: Solving Traveling Salesman Problem using Simulated Annealing
+
+File description:
+    Prepares the data for experiments.
+    Simulations are performed with different number of iterations.
+    The error between these simulation results are calculated.
+"""
+
 import json
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
@@ -20,6 +32,7 @@ def run_single_repeat(
     optimal_cost,
     base_seed,
 ):
+    """Runs different number of iterations per simulation."""
     rng = np.random.default_rng(base_seed + par_idx)
     s0 = problem.random_solution(rng)
     error = {n: [] for n in n_iters}
@@ -41,6 +54,9 @@ def run_single_repeat(
 
 
 def main():
+    """
+    Calculates error for different number of iterations used in simulation.
+    """
     base_seed = 125
     rng = np.random.default_rng(base_seed)
 

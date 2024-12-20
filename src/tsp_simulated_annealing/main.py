@@ -5,7 +5,8 @@ Student IDs: 15719227, 15393879, 13392425
 Assignement: Solving Traveling Salesman Problem using Simulated Annealing
 
 File description:
-    In this file all the code needed for the experiments is written.
+    In this file the main code functions needed for the experiments is written.
+    Simmulated annealing usign two-opt is implemented.
     An experiment will call this file to run a simulation of the system.
 """
 
@@ -55,11 +56,12 @@ def data_to_nodes(data):
     """Takes a data file, and transforms it into
     a list of Nodes and a list of coordinates."""
     nodes = []
-    coordinates = []  # so the id corresponds to index
+    coordinates = []
     for elem in data:
         info = elem.split(" ")
         info = " ".join(info).split()
         id, x, y = info
+        # id - 1 so the id corresponds to index
         nodes.append(Node(str(int(id) - 1), x, y))
         coordinates.append((float(x), float(y)))
     return (nodes, coordinates)
@@ -89,6 +91,7 @@ def make_initial_solution(highest_id, rng):
 
 
 def sample_non_adjacent(low, high, rng: np.random.Generator):
+    """Samples two non-adjecent edges."""
     i = rng.integers(low, high)
     while True:
         j = rng.integers(low, high)
@@ -101,6 +104,7 @@ def sample_non_adjacent(low, high, rng: np.random.Generator):
 
 @njit()
 def reverse_route(solution, idx_1, idx_2, locations, new_solution):
+    """Reverses segment of route resulting form the removal of two edges."""
     new_solution[idx_1 : idx_2 + 1] = new_solution[idx_1 : idx_2 + 1][::-1]
     c1, c2 = solution[idx_1 - 1], solution[idx_1]
     c3, c4 = solution[idx_2], solution[idx_2 + 1]
@@ -115,6 +119,8 @@ def reverse_route(solution, idx_1, idx_2, locations, new_solution):
 
 
 def two_opt(solution, locations, rng: np.random.Generator):
+    """Two-opt operation: removes two edges from list and reverses the list inbetween
+    creating two new edges."""
     idx_1, idx_2 = sample_non_adjacent(1, len(solution) - 1, rng)
     new_solution = solution.copy()
 
@@ -137,7 +143,7 @@ def distance_route(solution, coordinates) -> int:
 def main_algorithm(data, markov_chain_length, cooling_schedule, T_0, rng, acceptance):
     nodes, coordinates = data_to_nodes(data)
     """
-    To-do - stay for some time at one temperature T
+    Simmulated annealing algorithm.
     """
     highest_id = len(nodes) - 1
     T = T_0
@@ -160,11 +166,3 @@ def main_algorithm(data, markov_chain_length, cooling_schedule, T_0, rng, accept
         T = cooling_schedule(t)
 
     return cur_sol, cur_dis
-
-
-# nodes, coordinates = data_to_nodes(data_small)
-# print(distance_two_nodes(0, 1, coordinates))
-
-# opt_route = optimal_route_small
-# opt_dis = distance_route(opt_route, coordinates)
-# main_algorithm(data_small, opt_dis, cooling_schedule, tol=0.001)

@@ -1,3 +1,14 @@
+"""
+Course: Stochastic Simulation
+Names: Petr Chalupský, Henry Zwart, Tika van Bennekum
+Student IDs: 15719227, 15393879, 13392425
+Assignement: Solving Traveling Salesman Problem using Simulated Annealing
+
+File description:
+    Simulations are performed with different chain lenghts.
+    The error between these simulation results are calculated.
+"""
+
 import json
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
@@ -20,6 +31,9 @@ def run_simulation(
     optimal_cost,
     base_seed,
 ):
+    """
+    Runs simulation, varying the chain length.
+    """
     rng = np.random.default_rng(base_seed + par_idx)
     s0 = problem.random_solution(rng)
     error_matrix = np.empty((len(Cooling), len(chain_lengths)), dtype=np.float64)
@@ -43,6 +57,10 @@ def run_simulation(
 
 
 def main():
+    """
+    Calls function to provide simulations with different chain lengths.
+    Uses the data gathered to calculate the error between them.
+    """
     base_seed = 125
     rng = np.random.default_rng(base_seed)
 
@@ -107,21 +125,6 @@ def main():
 
     with Path("data/chain_length_error.meta").open("w") as f:
         json.dump(metadata, f)
-
-    # print(final_error.mean(axis=0))
-    # np.save(Path("data/inv_log_error.npy"), final_error)
-
-    # fig, ax = plt.subplots()
-    # mean_error = final_error.mean(axis=0)
-    # ci = 1.97 * final_error.std(ddof=1, axis=0) / np.sqrt(repeats)
-    # for i, algo in enumerate(Cooling):
-    #    ax.plot(chain_lengths, mean_error[i], label=algo)
-    #    ax.fill_between(
-    #        chain_lengths, mean_error[i] - ci[i], mean_error[i] + ci[i], alpha=0.3
-    #    )
-    # fig.legend()
-    # fig.tight_layout()
-    # fig.savefig("inv_log_err.pdf", dpi=300)
 
 
 if __name__ == "__main__":

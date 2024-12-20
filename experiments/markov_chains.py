@@ -1,3 +1,14 @@
+"""
+Course: Stochastic Simulation
+Names: Petr Chalupský, Henry Zwart, Tika van Bennekum
+Student IDs: 15719227, 15393879, 13392425
+Assignement: Solving Traveling Salesman Problem using Simulated Annealing
+
+File description:
+    Performs experiments related to the Markov chain.
+    The simulations keep track of the costs and temperature over time.
+"""
+
 import json
 import sys
 from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -39,6 +50,9 @@ def run_single_repeat(
     optimal_cost,
     base_seed,
 ):
+    """
+    Runs simulations for which it keep tracks of costs and temperature over time.
+    """
     rng = np.random.default_rng(base_seed + par_idx)
     initial_states = np.empty(
         (len(Cooling), cool_time + 1, len(problem.optimal_tour)),
@@ -83,6 +97,9 @@ def run_single_repeat(
 
 
 def main(chain_length):
+    """
+    Performs experiments for a certain Markov chain length.
+    """
     base_seed = 125
     rng = np.random.default_rng(base_seed)
 

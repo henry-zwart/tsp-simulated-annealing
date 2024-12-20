@@ -1,3 +1,13 @@
+"""
+Course: Stochastic Simulation
+Names: Petr Chalupský, Henry Zwart, Tika van Bennekum
+Student IDs: 15719227, 15393879, 13392425
+Assignement: Solving Traveling Salesman Problem using Simulated Annealing
+
+File description:
+    Prepares the data for different parameterisation experiments.
+"""
+
 import numpy as np
 
 from tsp_simulated_annealing.cooling_schedules import (
@@ -10,6 +20,9 @@ from tsp_simulated_annealing.tsp import tune_temperature
 
 
 def main():
+    """
+    Prepares the data for different parameterisation experiments.
+    """
     rng = np.random.default_rng(25)
     init_accept = 0.8
     final_accept = 0.01

@@ -28,6 +28,7 @@ def get_scheduler(
     time_n: float,
     algorithm: Cooling,
 ):
+    """Function to handle the different cooling schedules."""
     match algorithm:
         case Cooling.Linear:
             eta = fit_linear(init_temp, final_temp, time_n + 1)
@@ -56,12 +57,9 @@ def fit_inverse_log(init_temp, final_temp, n_samples) -> tuple[float, float]:
     """Determine a and b which fit initial conditions.
 
     This requires the use of a root-finding method to solve the equation:
-
-    b^(T0/Tn) - b - n = 0
-
+        b^(T0/Tn) - b - n = 0
     From which we can calculate a:
-
-    a = T0 log(b)
+        a = T0 log(b)
     """
     # define k = T0/Tn
     k = init_temp / final_temp

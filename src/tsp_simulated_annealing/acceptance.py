@@ -13,6 +13,7 @@ from scipy.special import expit
 
 
 def guarantee(h_next, h_current, T):
+    """When new solution is better, it is the quarented to be accepted."""
     return 1
 
 

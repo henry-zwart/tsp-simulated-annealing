@@ -1,3 +1,14 @@
+"""
+Course: Stochastic Simulation
+Names: Petr Chalupský, Henry Zwart, Tika van Bennekum
+Student IDs: 15719227, 15393879, 13392425
+Assignement: Solving Traveling Salesman Problem using Simulated Annealing
+
+File description:
+    For each problem, loads the problem and associated solution.
+    Calculates cost for the solution.
+"""
+
 import numpy as np
 
 from tsp_simulated_annealing.data import Problem

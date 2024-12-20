@@ -1,3 +1,13 @@
+"""
+Course: Stochastic Simulation
+Names: Petr Chalupský, Henry Zwart, Tika van Bennekum
+Student IDs: 15719227, 15393879, 13392425
+Assignement: Solving Traveling Salesman Problem using Simulated Annealing
+
+File description:
+    For each cooling schedule, the final solution and its costs are shown.
+"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -7,6 +17,7 @@ from tsp_simulated_annealing.tsp import solve_tsp
 
 
 def main():
+    """Plots costs of final solutions for each cooling algorithm."""
     rng = np.random.default_rng(125)
 
     # Load small problem
@@ -33,12 +44,6 @@ def main():
                 init_accept=0.8,
             )
             states = results.states
-            final_state = states[-1]
-            cost = problem.distance(final_state)
-            # print(f"Solution: {final_state}")
-            print(f"Cost: {cost}")
-            print(f"Error: {cost - problem.optimal_distance()}")
-            print()
 
         ax.plot(np.arange(cool_time), problem.distance_many(states))
 
