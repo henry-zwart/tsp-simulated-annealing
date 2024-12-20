@@ -1,3 +1,4 @@
+import json
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 
@@ -52,10 +53,11 @@ def main():
     # Solve for each cooling schedule, printing the final solution and cost
     chain_length = 1000  # How long we stay at one temperature
     repeats = 30
+    init_accept = 0.8
     temperatures = tune_temperature(
         problem.random_solution(rng),
         problem,
-        init_accept=0.8,
+        init_accept=init_accept,
         rng=rng,
     )
     n_iters = np.array([500, 1000, 2000])
@@ -88,6 +90,26 @@ def main():
     for n, e in all_errors.items():
         for c_i, c in enumerate(Cooling):
             np.save(Path(f"data/a280_{c}_{n}_errors.npy"), e[:, c_i].copy())
+
+    metadata = {
+        "n_samples": n_iters.tolist(),
+        "repeats": repeats,
+        "chain_length": chain_length,
+        "init_accept": init_accept,
+    }
+    for c_i, cooling in enumerate(Cooling):
+        metadata[cooling] = {}
+        for n in n_iters:
+            error = all_errors[n][:, c_i, -1]
+            final_error_mean = error.mean()
+            final_error_ci = error.std(ddof=1) / np.sqrt(repeats)
+            metadata[cooling][int(n)] = {
+                "final_error_mean": float(final_error_mean),
+                "final_error_ci": float(final_error_ci),
+            }
+    print(metadata)
+    with Path("data/cooling.meta").open("w") as f:
+        json.dump(metadata, f)
 
 
 if __name__ == "__main__":
