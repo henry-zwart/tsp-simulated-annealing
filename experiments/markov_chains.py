@@ -1,4 +1,5 @@
 import json
+import sys
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from functools import partial
 from pathlib import Path
@@ -12,6 +13,8 @@ from tsp_simulated_annealing.cooling_schedules import (
     fit_exponential,
     fit_inverse_log,
     fit_linear,
+    inverse_exponential,
+    inverse_linear,
     inverse_log_cooling,
     linear_cooling,
 )
@@ -79,7 +82,7 @@ def run_single_repeat(
     return par_idx, initial_states, costs, error, temperatures
 
 
-def main():
+def main(chain_length):
     base_seed = 125
     rng = np.random.default_rng(base_seed)
 
@@ -88,10 +91,9 @@ def main():
     optimal_cost = problem.optimal_distance()
 
     # Varying chain length, balancing total work
-    cool_time = 2000
+    cool_time = 1000
     n_iterations = cool_time + 1
-    chain_length = 1000
-    repeats = 15
+    repeats = 30
     n_samples = 30000
 
     # Configure cooling algorithms
@@ -114,11 +116,17 @@ def main():
         partial(inverse_log_cooling, a=a, b=b),
     ]
 
-    select_times = {
-        Cooling.Linear: [0, 750, 1250, 2000],
-        Cooling.Exponential: [0, 750, 1250, 2000],
-        Cooling.InverseLog: [0, 1, 5, 100],
-    }
+    # Determine times, t1, t2, where exponential and linear temperatures
+    #   equal inverse-log temperature.
+    select_times = {Cooling.InverseLog: [1, 2]}
+    inv_log_temps = [cooling_methods[2](t) for t in select_times[Cooling.InverseLog]]
+
+    select_times[Cooling.Linear] = [
+        inverse_linear(eta, initial_temp, temp) for temp in inv_log_temps
+    ]
+    select_times[Cooling.Exponential] = [
+        inverse_exponential(alpha, initial_temp, temp) for temp in inv_log_temps
+    ]
 
     all_initial_states = np.empty(
         (repeats, len(Cooling), n_iterations, len(problem.optimal_tour)),
@@ -150,7 +158,9 @@ def main():
         ]
 
         for future in tqdm(
-            as_completed(futures), total=repeats, desc="Processing repeats"
+            as_completed(futures),
+            total=repeats,
+            desc=f"Processing repeats (L_k={chain_length})",
         ):
             r, initial_states, costs, errors, temps = future.result()
             all_initial_states[r] = initial_states
@@ -158,8 +168,8 @@ def main():
             all_errors[r] = errors
             all_sample_temps = temps
 
-    np.save(Path("data/chain_costs.npy"), all_costs)
-    np.save(Path("data/chain_error.npy"), all_errors)
+    np.save(Path(f"data/chain_costs_{chain_length}.npy"), all_costs)
+    np.save(Path(f"data/chain_error_{chain_length}.npy"), all_errors)
 
     metadata = {
         "cooling": {
@@ -185,9 +195,10 @@ def main():
         "repeats": repeats,
     }
 
-    with Path("data/markov_chains.meta").open("w") as f:
+    with Path(f"data/markov_chains_{chain_length}.meta").open("w") as f:
         json.dump(metadata, f)
 
 
 if __name__ == "__main__":
-    main()
+    chain_length = int(sys.argv[1])
+    main(chain_length)

@@ -101,3 +101,17 @@ def linear_cooling(t, eta, T_0):
     """
     T = T_0 - eta * t
     return T
+
+
+def inverse_linear(eta, T_0, T_n):
+    """
+    Calculate the time at which linear cooling reaches a given temperature.
+    """
+    return int(np.round((T_0 - T_n) / eta))
+
+
+def inverse_exponential(alpha, T_0, T_n):
+    """
+    Calculate the time at which exponential cooling reaches a given temperature.
+    """
+    return int(np.round((np.log(T_n / T_0)) / np.log(alpha)))

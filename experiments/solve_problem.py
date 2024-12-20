@@ -10,7 +10,7 @@ def main():
     rng = np.random.default_rng(125)
 
     # Load small problem
-    problem = Problem.SMALL.load()
+    problem = Problem.MEDIUM.load()
 
     # Sample an initial state
     initial_solution = problem.random_solution(rng)
@@ -19,7 +19,7 @@ def main():
 
     # Solve for each cooling schedule, printing the final solution and cost
     n_samples = 500
-    cool_time = 1500
+    cool_time = 2000
     for algorithm in Cooling:
         print(f"Solving with {algorithm}, chain-length = {n_samples}...")
         for _ in range(5):
@@ -30,7 +30,7 @@ def main():
                 cool_time,
                 rng,
                 n_samples,
-                final_accept=0.001,
+                init_accept=0.8,
             )
             states = results.states
             final_state = states[-1]
