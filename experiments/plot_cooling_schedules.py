@@ -2,8 +2,6 @@
 # 3 subplots, each subplot one cooling schedule a280
 # each subplot 3 times 500, 1000, 2000
 
-import json
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -138,6 +136,3 @@ axes[1, 0].set_yscale("log")
 axes[1, 0].set_ylim(100, None)
 
 fig.savefig("results/figures/plot_temperature.pdf", dpi=700)
-
-with Path("data/cooling.meta").open("w") as f:
-    json.dump({"n_samples": [500, 1000, 2000]}, f)
