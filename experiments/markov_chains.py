@@ -118,14 +118,17 @@ def main(chain_length):
 
     # Determine times, t1, t2, where exponential and linear temperatures
     #   equal inverse-log temperature.
-    select_times = {Cooling.InverseLog: [1, 2]}
+    select_times = {Cooling.InverseLog: [0, 1, 2, 5, 100]}
+
     inv_log_temps = [cooling_methods[2](t) for t in select_times[Cooling.InverseLog]]
 
     select_times[Cooling.Linear] = [
-        inverse_linear(eta, initial_temp, temp) for temp in inv_log_temps
+        min(inverse_linear(eta, initial_temp, temp), cool_time)
+        for temp in inv_log_temps
     ]
     select_times[Cooling.Exponential] = [
-        inverse_exponential(alpha, initial_temp, temp) for temp in inv_log_temps
+        min(inverse_exponential(alpha, initial_temp, temp), cool_time)
+        for temp in inv_log_temps
     ]
 
     all_initial_states = np.empty(

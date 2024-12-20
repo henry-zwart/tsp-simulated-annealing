@@ -82,11 +82,12 @@ def main(chain_lengths: list[int]):
     )
     with (DATA_DIR / "markov_chains_200.meta").open("r") as f:
         metadata = json.load(f)
-    chain_error_200 = np.load(DATA_DIR / "chain_error_200.npy")
-    chain_error_1500 = np.load(DATA_DIR / "chain_error_1500.npy")
+
+    chain_error_200 = np.load(DATA_DIR / "chain_error_200.npy")[..., 1:3, :]
+    chain_error_1500 = np.load(DATA_DIR / "chain_error_1500.npy")[..., 1:3, :]
     for c_i, cooling in enumerate(Cooling):
-        measure_times = metadata["measure_times"][cooling]
-        temperatures = metadata["cooling"][cooling]["temperatures"]
+        measure_times = metadata["measure_times"][cooling][1:3]
+        temperatures = metadata["cooling"][cooling]["temperatures"][1:3]
         samples = np.arange(1, metadata["measure_chain_length"] + 1)
 
         row = 2 - c_i
@@ -151,6 +152,58 @@ def main(chain_lengths: list[int]):
     fig.get_layout_engine().set(w_pad=4 / 72, h_pad=8 / 72, hspace=0, wspace=0)
 
     fig.savefig(FIGURES_DIR / "traces.pdf", dpi=300, bbox_inches="tight")
+
+    # === Plot inverse-log trace plot
+    for chain_length in (200, 1500):
+        # Only get inverse-log, for subset of times
+        chain_error = np.load(DATA_DIR / f"chain_error_{chain_length}.npy")[
+            ..., [0, 1, 3, 4], :
+        ]
+
+        for c_i, c in enumerate(Cooling):
+            measure_times = np.array(metadata["measure_times"][c])[[0, 1, 3, 4]]
+            temperatures = np.array(metadata["cooling"][c]["temperatures"])[
+                [0, 1, 3, 4]
+            ]
+            samples = np.arange(1, metadata["measure_chain_length"] + 1)
+
+            fig, axes = plt.subplots(
+                1, 4, layout="constrained", figsize=(6.5, 2.25), sharex=True
+            )
+
+            for t_i, t in enumerate(temperatures):
+                axis = axes[t_i]
+                chain = chain_error[:, c_i, t_i]
+                mean = chain.mean(axis=0)
+                std = chain.std(axis=0, ddof=1)
+                lower = np.clip(mean - 2 * std, a_min=0, a_max=None)
+                upper = mean + 2 * std
+                axis.plot(samples, mean, linewidth=1)
+                axis.fill_between(samples, lower, upper, alpha=0.3)
+                axis.xaxis.set_label_position("top")
+                axis.set_xlabel(
+                    r"$T($" + str(measure_times[t_i]) + r"$) = $" + f"{t:.2f}"
+                )
+                axis.set_ylim(0, None)
+
+            axes[0].set_ylabel("Error")
+
+            for ax in axes:
+                ticks = np.arange(10000, 30001, 10000)
+                ax.set_xticks(
+                    ticks,
+                    labels=map(str, ticks),
+                    rotation=45,
+                    ha="right",
+                )
+
+            fig.supxlabel("Samples")
+            fig.suptitle(f"{c.replace("_", " ").title()} cooling trace")
+            fig.savefig(
+                FIGURES_DIR / f"trace_{c}_{chain_length}.pdf",
+                dpi=300,
+                bbox_inches="tight",
+            )
 
     for chain_length in chain_lengths:
         with (DATA_DIR / f"markov_chains_{chain_length}.meta").open("r") as f:
