@@ -20,6 +20,11 @@ results/plot_metadata.json: experiments/plots.py results/experiment_metadata.jso
 $(FIGURES_DIR):
 	mkdir -p $@
 
+
+results/tests.json: experimens/stat_tests.py data/cooling.meta | $(FIGURES_DIR)
+	$(ENTRYPOINT) $<
+
+
 results/experiment_metadata.json: \
 			scripts/combine_metadata.py \
 			data/chain_length_error.meta \
