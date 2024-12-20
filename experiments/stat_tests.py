@@ -8,6 +8,7 @@ from tsp_simulated_annealing.cooling_schedules import Cooling
 
 
 def main():
+    """Welch's test to test significance of increasing number of iterations."""
     RESULTS_PATH = Path("results")
     DATA_PATH = Path("data")
     with (DATA_PATH / "cooling.meta").open("r") as f:
